@@ -80,6 +80,7 @@ _get_namenode_hostname(){
         fi
     done
 }
+export -f _get_namenode_hostname
 
 _init(){
 

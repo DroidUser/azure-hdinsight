@@ -117,14 +117,16 @@ _init(){
 	#update the master hostname in configuration files
 	sed -i 's/{{namenode-hostnames}}/thrift:\/\/${active_namenode_hostname}:9083,thrift:\/\/${secondary_namenode_hostname}:9083/g' /etc/spark2/HDP_VERSION/0/hive-site.xml
 	sed -i 's/{{history-server-hostname}}/${active_namenode_hostname}:18080/g' /etc/spark2/HDP_VERSION/0/spark-defaults.conf
-
+	
+	long_hostname=`hostname -f`
+	
 	#start the demons based on host
-	if[ `hostname -f` = $active_namenode_hostname ]; then
+	if[ $long_hostname == $active_namenode_hostname ]; then
 		cd /usr/hdp/current/spark2-client
 		eval ./sbin/start-history-server.sh
 		eval ./sbin/start-master.sh
 		eval ./sbin/start-thriftserver.sh
-	elif [ `hostname -f` = $secondary_namenode_hostname ]; then
+	elif [ $long_hostname == $secondary_namenode_hostname ]; then
 	 	cd /usr/hdp/current/spark2-client
 	 	eval ./sbin/start-thriftserver.sh
 	else

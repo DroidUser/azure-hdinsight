@@ -121,7 +121,7 @@ _init(){
 	long_hostname=`hostname -f`
 	
 	#start the demons based on host
-	if[ $long_hostname == $active_namenode_hostname ]; then
+	if [ $long_hostname == $active_namenode_hostname ]; then
 		cd /usr/hdp/current/spark2-client
 		eval ./sbin/start-history-server.sh
 		eval ./sbin/start-master.sh

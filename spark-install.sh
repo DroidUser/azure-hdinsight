@@ -17,7 +17,7 @@ _untar_file()
     unzipdir=$2;
 
     if [ -e $zippedfile ]; then
-        tar -xf $zippedfile -C $unzipdir;
+        tar -xzf $zippedfile -C $unzipdir;
     fi
 }
 
@@ -56,6 +56,7 @@ _get_namenode_hostname(){
 
     return_var=$1
     default=$2
+    desired_status=$3
 
     hadoop_cluster_name=`hdfs getconf -confKey dfs.nameservices`
 
@@ -69,7 +70,7 @@ _get_namenode_hostname(){
     for namenode_id in `echo $namenode_id_string | tr "," " "`
     do
         status=`hdfs haadmin -getServiceState $namenode_id`
-        if [ $status = "active" ]; then
+        if [ $status = $desired_status ]; then
             active_namenode=`hdfs getconf -confKey dfs.namenode.https-address.$hadoop_cluster_name.$namenode_id`
             IFS=':' read -ra $return_var<<< "$active_namenode"
             if [ "${!return_var}" == "" ]; then
@@ -81,14 +82,63 @@ _get_namenode_hostname(){
 }
 
 _init(){
-	
-	_get_namenode_hostname namenode_hostname `hostname -f`
-	hadoop_version={ eval hadoop version | head -1 } || "not found"
-	hive_version={ eval hive --version | head -1 } || "not found"
+
+	#Determine Hortonworks Data Platform version
+	HDP_VERSION=`ls /usr/hdp/ -I current`
+
+	#get active namenode of cluster
+	_get_namenode_hostname active_namenode_hostname `hostname -f` "active"
+	_get_namenode_hostname secondary_namenode_hostname `hostname -f` "standby"
+
+	#download the spark config tar file
+	download_file https://raw.githubusercontent.com/DroidUser/azure-hdinsight/master/sparkconf.tar.gz /sparkconf.tar.gz
+
+	# Untar the Spark config tar.
+	mkdir /spark-config
+	untar_file /sparkconf.tar.gz /spark-config/
+
+	#replace default config of spark in cluster
+	cp /spark-config/0 /etc/spark2/HDP_VERSION/
+
+	#replace environment file
+	cp /spark-config/environment /etc/
+
+	#create config directories
+	mkdir /var/log/spark2
+	mkdir -p /var/run spark2/work 
+
+	#change permission
+	chmod -R 777 /var/log/spark2
+	chown -R spark: /var/log/spark2
+	chmod -R 777 /var/run/spark2
+	chown -R spark: /var/run/spark2
+
+	#update the master hostname in configuration files
+	sed -i 's/{{namenode-hostnames}}/thrift:\/\/${active_namenode_hostname}:9083,thrift:\/\/${secondary_namenode_hostname}:9083/g' /etc/spark2/HDP_VERSION/0/hive-site.xml
+	sed -i 's/{{history-server-hostname}}/${active_namenode_hostname}:18080/g' /etc/spark2/HDP_VERSION/0/spark-defaults.conf
+
+	#start the demons based on host
+	if[ `hostname -f` = $active_namenode_hostname ]; then
+		cd /usr/hdp/current/spark2-client
+		eval ./sbin/start-history-server.sh
+		eval ./sbin/start-master.sh
+		eval ./sbin/start-thriftserver.sh
+	elif [ `hostname -f` = $secondary_namenode_hostname ]; then
+	 	cd /usr/hdp/current/spark2-client
+	 	eval ./sbin/start-thriftserver.sh
+	else
+		cd /usr/hdp/current/spark2-client
+		eval ./sbin/start-slave.sh
+	fi	 
+
+	hadoop_version=eval hadoop version | head -1
+	hive_version=eval hive --version | head -1
 
 	#Create file with hostnames
 	host_metadata="metadata.txt"
-	echo $namenode_hostname >> $host_metadata
+	echo "HDI version : "$HDP_VERSION >> $host_metadata
+	echo "active namenode : "$active_namenode_hostname >> $host_metadata
+	echo "standby namenode : "$secondary_namenode_hostname >> $host_metadata
 	echo $hadoop_version >> $host_metadata
 	echo $hive_version >> $host_metadata
 

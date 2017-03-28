@@ -92,11 +92,11 @@ _init(){
 	_get_namenode_hostname secondary_namenode_hostname `hostname -f` "standby"
 
 	#download the spark config tar file
-	download_file https://raw.githubusercontent.com/DroidUser/azure-hdinsight/master/sparkconf.tar.gz /sparkconf.tar.gz
+	_download_file https://raw.githubusercontent.com/DroidUser/azure-hdinsight/master/sparkconf.tar.gz /sparkconf.tar.gz
 
 	# Untar the Spark config tar.
 	mkdir /spark-config
-	untar_file /sparkconf.tar.gz /spark-config/
+	_untar_file /sparkconf.tar.gz /spark-config/
 
 	#replace default config of spark in cluster
 	cp /spark-config/0 /etc/spark2/HDP_VERSION/

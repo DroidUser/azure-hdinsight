@@ -140,9 +140,6 @@ _init(){
 		eval ./sbin/start-slaves.sh
 	fi	 
 
-	hadoop_version=eval hadoop version | head -1
-	hive_version=eval hive --version | head -1
-
 	#Create file with hostnames
 	host_metadata="metadata.txt"
 	echo "HDI version : "$HDP_VERSION >> $host_metadata

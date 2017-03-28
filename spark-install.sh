@@ -141,8 +141,6 @@ _init(){
 	echo "HDI version : "$HDP_VERSION >> $host_metadata
 	echo "active namenode : "$active_namenode_hostname >> $host_metadata
 	echo "standby namenode : "$secondary_namenode_hostname >> $host_metadata
-	echo $hadoop_version >> $host_metadata
-	echo $hive_version >> $host_metadata
 
 	touch $host_metadata
 }

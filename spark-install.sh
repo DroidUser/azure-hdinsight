@@ -100,12 +100,7 @@ _init(){
 
 	#replace default config of spark in cluster
 	cp -r /spark-config/0 /etc/spark2/$HDP_VERSION/
-	
-	#temp (remove slaves from tar)
-	rm -rf /etc/spark2/$HDP_VERSION/0/slaves
-	
-	echo localhost >> /etc/spark2/$HDP_VERSION/0/slaves.template
-	
+
 	#replace environment file
 	cp /spark-config/environment /etc/
 	source /etc/environment
@@ -135,6 +130,7 @@ _init(){
 	elif [ $long_hostname == $secondary_namenode_hostname ]; then
 	 	cd /usr/hdp/current/spark2-client
 	 	eval ./sbin/start-thriftserver.sh
+		eval ./sbin/start-slaves.sh
 	else
 		cd /usr/hdp/current/spark2-client
 		eval ./sbin/start-slaves.sh

@@ -131,7 +131,7 @@ _init(){
 	 	eval ./sbin/start-thriftserver.sh
 	else
 		cd /usr/hdp/current/spark2-client
-		eval ./sbin/start-slave.sh -i spark://$active_namenode_hostname:18080
+		eval ./sbin/start-slave.sh -hp spark://$active_namenode_hostname:18080
 	fi	 
 
 	hadoop_version=eval hadoop version | head -1

@@ -106,7 +106,7 @@ _init(){
 
 	#create config directories
 	mkdir /var/log/spark2
-	mkdir -p /var/run spark2/work 
+	mkdir -p /var/run/spark2/work 
 
 	#change permission
 	chmod -R 777 /var/log/spark2

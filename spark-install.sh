@@ -100,10 +100,16 @@ _init(){
 
 	#replace default config of spark in cluster
 	cp -r /spark-config/0 /etc/spark2/$HDP_VERSION/
-
+	
+	#temp (remove slaves from tar)
+	rm -rf /etc/spark2/$HDP_VERSION/0/slaves
+	
+	echo localhost >> /etc/spark2/$HDP_VERSION/0/slaves.template
+	
 	#replace environment file
 	cp /spark-config/environment /etc/
-
+	source /etc/environment
+	
 	#create config directories
 	mkdir /var/log/spark2
 	mkdir -p /var/run/spark2/work 
@@ -131,7 +137,7 @@ _init(){
 	 	eval ./sbin/start-thriftserver.sh
 	else
 		cd /usr/hdp/current/spark2-client
-		eval ./sbin/start-slave.sh -hp spark://$active_namenode_hostname:18080
+		eval ./sbin/start-slaves.sh
 	fi	 
 
 	hadoop_version=eval hadoop version | head -1

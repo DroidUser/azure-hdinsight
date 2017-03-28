@@ -99,7 +99,7 @@ _init(){
 	_untar_file /sparkconf.tar.gz /spark-config/
 
 	#replace default config of spark in cluster
-	cp /spark-config/0 /etc/spark2/HDP_VERSION/
+	cp -r /spark-config/0 /etc/spark2/HDP_VERSION/
 
 	#replace environment file
 	cp /spark-config/environment /etc/

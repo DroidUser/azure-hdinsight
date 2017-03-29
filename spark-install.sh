@@ -109,30 +109,29 @@ _init(){
 	
 	#create config directories
 	mkdir /var/log/spark2
-	mkdir -p /var/run/spark2/work 
+	mkdir -p /var/run/spark2
 
 	#change permission
-	chmod -R 777 /var/log/spark2
+	chmod -R 775 /var/log/spark2
 	chown -R spark: /var/log/spark2
-	chmod -R 777 /var/run/spark2
+	chmod -R 775 /var/run/spark2
 	chown -R spark: /var/run/spark2
 
 	#update the master hostname in configuration files
 	sed -i 's|{{namenode-hostnames}}|thrift:\/\/'"${active_namenode_hostname}"':9083,thrift:\/\/'"${secondary_namenode_hostname}"':9083|g' /etc/spark2/$HDP_VERSION/0/hive-site.xml
-	sed -i 's|{{history-server-hostname}}|'"${active_namenode_hostname}"':18080|g' /etc/spark2/$HDP_VERSION/0/spark-defaults.conf
+	sed -i 's|{{history-server-hostname}}|'"${secondary_namenode_hostname}"':18080|g' /etc/spark2/$HDP_VERSION/0/spark-defaults.conf
 	
 	long_hostname=`hostname -f`
 	
 	#start the demons based on host
 	if [ $long_hostname == $active_namenode_hostname ]; then
 		cd /usr/hdp/current/spark2-client
-		eval ./sbin/start-history-server.sh
-		eval ./sbin/start-master.sh
 		eval ./sbin/start-thriftserver.sh
 	elif [ $long_hostname == $secondary_namenode_hostname ]; then
 	 	cd /usr/hdp/current/spark2-client
-	 	eval ./sbin/start-thriftserver.sh
-		eval ./sbin/start-slaves.sh
+	 	eval ./sbin/start-history-server.sh
+		eval ./sbin/start-master.sh
+		eval ./sbin/start-thriftserver.sh
 	else
 		cd /usr/hdp/current/spark2-client
 		eval ./sbin/start-slaves.sh

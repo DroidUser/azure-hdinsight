@@ -103,6 +103,12 @@ _init(){
 	cp -r /spark-config/LIVY /var/lib/ambari-server/resources/stacks/HDP/2.5/services/
 	cp -r /spark-config/JUPYTER /var/lib/ambari-server/resources/stacks/HDP/2.5/services/
 	
+	slaves_file_name="slaves"
+	echo $active_namenode_hostname >> $slaves_file_name
+	echo "wno-iwtest" >> $slaves_file_name
+	echo "wn1-iwtest" >> $slaves_file_name
+	touch $slaves_file_name
+	
 	#replace environment file
 	cp /spark-config/environment /etc/
 	source /etc/environment
@@ -131,11 +137,8 @@ _init(){
 	elif [ $long_hostname == $secondary_namenode_hostname ]; then
 	 	cd /usr/hdp/current/spark2-client
 	 	eval ./sbin/start-history-server.sh
-		eval ./sbin/start-master.sh
+		eval ./sbin/start-all.sh
 		eval ./sbin/start-thriftserver.sh
-	else
-		cd /usr/hdp/current/spark2-client
-		eval ./sbin/start-slaves.sh
 	fi	 
 
 	#Create file with hostnames

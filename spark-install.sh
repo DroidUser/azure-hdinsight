@@ -108,6 +108,7 @@ _init(){
 	echo "wno-iwtest" >> $slaves_file_name
 	echo "wn1-iwtest" >> $slaves_file_name
 	touch $slaves_file_name
+	mv $slaves_file_name /etc/spark2/$HDP_VERSION/0/
 	
 	#replace environment file
 	cp /spark-config/environment /etc/

@@ -125,10 +125,10 @@ _init(){
 	if [ $long_hostname == $active_namenode_hostname ]; then
 	 	cd /usr/hdp/current/spark2-client
 		eval sudo -u spark ./sbin/start-history-server.sh
-		eval sudo -u hive ./sbin/start-thriftserver.sh
+		eval sudo -u spark ./sbin/start-thriftserver.sh --master yarn-client --executor-memory 512m --hiveconf hive.server2.thrift.port=100015
 	elif [ $long_hostname == $secondary_namenode_hostname ]; then
 		cd /usr/hdp/current/spark2-client
-		eval sudo -u hive ./sbin/start-thriftserver.sh
+		eval sudo -u spark ./sbin/start-thriftserver.sh --master yarn-client --executor-memory 512m --hiveconf hive.server2.thrift.port=100015
 	else
 		cd /usr/hdp/current/spark2-client
 		eval sudo -u spark ./sbin/start-slaves.sh

@@ -82,11 +82,31 @@ _get_namenode_hostname(){
 }
 export -f _get_namenode_hostname
 
+_list_hostnames(){
+
+	zookeeper_hostnames=()
+
+	curl -u iw-test-admin:Cluster@2017$ -k https://iwtest.azurehdinsight.net/api/v1/clusters/iwtest/hosts/ > api.log
+	cat cluster_hostnames.log | grep host_name  | awk '{print $3}' | sed "s/\"//g" > cluster_hostnames.txt
+
+	while read line; do 
+		echo $line
+		if [[ $line == zk* ]]; then   
+	    	zookeeper_hostnames+=($line)
+	    fi  
+	done < cluster_hostnames.txt
+
+}
+export -f _list_hostnames
+
 _timestamp(){
 	date +%H:%M:%S
 }
 
 _init(){
+
+	echo "[$(_timestamp)]: finding all hostnames of cluster"
+	_list_hostnames
 
 	#Determine Hortonworks Data Platform version
 	HDP_VERSION=`ls /usr/hdp/ -I current`
@@ -106,7 +126,8 @@ _init(){
 	echo "[$(_timestamp)]: coping conf folder to spark2"
 	#replace default config of spark in cluster
 	cp -r /spark-config/0 /etc/spark2/$HDP_VERSION/
-	
+	cp -r /spark-config/livy /usr/hdp/$HDP_VERSION/
+
 	echo "[$(_timestamp)]: replace environment file"
 	#replace environment file
 	cp /spark-config/environment /etc/
@@ -115,22 +136,36 @@ _init(){
 	echo "[$(_timestamp)]: create few spark folders"
 	#create config directories
 	mkdir /var/log/spark2
-	mkdir -p /var/run/spark2
+	mkdir /var/run/spark2
+	mkdir /var/run/livy
 
 	echo "[$(_timestamp)]: changing permission of folders"
 	#change permission
-	chmod -R 775 /var/log/spark2
-	chown -R spark: /var/log/spark2
-	chmod -R 775 /var/run/spark2
-	chown -R spark: /var/run/spark2
+	chmod 775 /var/log/spark2
+	chown spark:hadoop /var/log/spark2
+	chmod 775 /var/run/spark2
+	chown spark:hadoop /var/run/spark2
+	chown livy:hadoop /var/run/livy
+	chown livy:hadoop /var/log/livy
+	chmod 775 /var/log/livy
+	chmod 777 /var/run/livy
 
 	echo "[$(_timestamp)]: replacing placeholders in conf files"
 	#update the master hostname in configuration files
-	sed -i 's|{{namenode-hostnames}}|thrift:\/\/'"${active_namenode_hostname}"':9083,thrift:\/\/'"${secondary_namenode_hostname}"':9083|g' /etc/spark2/$HDP_VERSION/0/hive-site.xml
+	#sed -i 's|{{namenode-hostnames}}|thrift:\/\/'"${active_namenode_hostname}"':9083,thrift:\/\/'"${secondary_namenode_hostname}"':9083|g' /etc/spark2/$HDP_VERSION/0/hive-site.xml
 	sed -i 's|{{history-server-hostname}}|'"${active_namenode_hostname}"':18080|g' /etc/spark2/$HDP_VERSION/0/spark-defaults.conf
-	sed -i 's|{{spark-master-hostname}}|spark:\/\/'"${active_namenode_hostname}"':7077|g' /etc/spark2/$HDP_VERSION/0/spark-defaults.conf
-	sed -i 's|{{spark-master-hostname}}|spark:\/\/'"${active_namenode_hostname}"':7077|g' /etc/spark2/$HDP_VERSION/0/spark-thrift-sparkconf.conf
-	
+
+	zookeeper_hostnames_string=""
+	for i in "${!zookeeper_hostnames[@]}"
+		do
+		   	zookeeper_hostnames_string+=${zookeeper_hostnames[$i]}":2181"
+	   		if [[ $(( ${#zookeeper_hostnames[@]} - 1 )) > $i ]]; then
+				zookeeper_hostnames_string+=","
+			fi
+		done
+
+	sed -i 's|{{zookeeper-hostnames}}|'"${zookeeper_hostnames_string}"'|g' /usr/hdp/$HDP_VERSION/livy/conf/livy.conf
+
 	long_hostname=`hostname -f`
 	
 	#start the demons based on host
@@ -139,18 +174,19 @@ _init(){
 	 	cd /usr/hdp/current/spark2-client
 		echo "[$(_timestamp)]: starting history server"
 		eval sudo -u spark ./sbin/start-history-server.sh
-		echo "[$(_timestamp)]: starting master"
-		eval sudo -u spark ./sbin/start-master.sh
 		echo "[$(_timestamp)]: starting thrift server"
-		eval sudo -u hive ./sbin/start-thriftserver.sh --master yarn-client --executor-memory 512m --hiveconf hive.server2.thrift.port=100015
+		#eval sudo -u hive ./sbin/start-thriftserver.sh --master yarn
+		cd /usr/hdp/current/livy-server/
+		eval sudo -u livy ./bin/livy-server
 	elif [ $long_hostname == $secondary_namenode_hostname ]; then
 		cd /usr/hdp/current/spark2-client
 		echo "[$(_timestamp)]: starting thrift server"
-		eval sudo -u hive ./sbin/start-thriftserver.sh --master yarn-client --executor-memory 512m --hiveconf hive.server2.thrift.port=100015
+		eval sudo -u hive ./sbin/start-thriftserver.sh --master yarn
 	else
-		cd /usr/hdp/current/spark2-client
+		cd /usr/hdp/current/spark2-client/
+		rm -rf work
 		echo "[$(_timestamp)]: starting slaves"
-		eval ./sbin/start-slaves.sh
+		eval ./sbin/start-slave.sh master yarn
 	fi	 
 	
 	echo "[$(_timestamp)]: writing metadata file"

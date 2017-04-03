@@ -118,6 +118,8 @@ _init(){
 	#update the master hostname in configuration files
 	sed -i 's|{{namenode-hostnames}}|thrift:\/\/'"${active_namenode_hostname}"':9083,thrift:\/\/'"${secondary_namenode_hostname}"':9083|g' /etc/spark2/$HDP_VERSION/0/hive-site.xml
 	sed -i 's|{{history-server-hostname}}|'"${active_namenode_hostname}"':18080|g' /etc/spark2/$HDP_VERSION/0/spark-defaults.conf
+	sed -i 's|{{spark-master-hostname}}|spark:\/\/'"${active_namenode_hostname}"':7077|g' /etc/spark2/$HDP_VERSION/0/spark-defaults.conf
+	sed -i 's|{{spark-master-hostname}}|spark:\/\/'"${active_namenode_hostname}"':7077|g' /etc/spark2/$HDP_VERSION/0/spark-thrift-sparkconf.conf
 	
 	long_hostname=`hostname -f`
 	
@@ -125,10 +127,12 @@ _init(){
 	if [ $long_hostname == $active_namenode_hostname ]; then
 	 	cd /usr/hdp/current/spark2-client
 		eval sudo -u spark ./sbin/start-history-server.sh
-		eval sudo -u spark ./sbin/start-thriftserver.sh --master yarn-client --executor-memory 512m --hiveconf hive.server2.thrift.port=100015
+		eval sudo -u spark ./sbin/start-master.sh
+		eval sudo -u hive ./sbin/start-thriftserver.sh --master yarn-client --executor-memory 512m --hiveconf hive.server2.thrift.port=100015
 	elif [ $long_hostname == $secondary_namenode_hostname ]; then
 		cd /usr/hdp/current/spark2-client
-		eval sudo -u spark ./sbin/start-thriftserver.sh --master yarn-client --executor-memory 512m --hiveconf hive.server2.thrift.port=100015
+		eval sudo -u spark ./sbin/start-slaves.sh
+		eval sudo -u hive ./sbin/start-thriftserver.sh --master yarn-client --executor-memory 512m --hiveconf hive.server2.thrift.port=100015
 	else
 		cd /usr/hdp/current/spark2-client
 		eval sudo -u spark ./sbin/start-slaves.sh

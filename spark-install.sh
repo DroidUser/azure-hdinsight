@@ -118,7 +118,12 @@ _init(){
 	
 	#download the spark config tar file
 	_download_file https://raw.githubusercontent.com/DroidUser/azure-hdinsight/master/sparkconf.tar.gz /sparkconf.tar.gz
-	
+
+	wget http://archive.cloudera.com/beta/livy/livy-server-0.3.0.zip
+	unzip livy-server-0.3.0.zip
+	mv livy-server-0.3.0 livy
+	cp -r livy/ /usr/hdp/$HDP_VERSION/
+
 	# Untar the Spark config tar.
 	mkdir /spark-config
 	_untar_file /sparkconf.tar.gz /spark-config/
@@ -181,7 +186,7 @@ _init(){
 	elif [ $long_hostname == $secondary_namenode_hostname ]; then
 		cd /usr/hdp/current/spark2-client
 		echo "[$(_timestamp)]: starting thrift server"
-		eval sudo -u hive ./sbin/start-thriftserver.sh --master yarn
+		#eval sudo -u hive ./sbin/start-thriftserver.sh --master yarn
 	else
 		cd /usr/hdp/current/spark2-client/
 		rm -rf work

@@ -86,7 +86,7 @@ _list_hostnames(){
 
 	zookeeper_hostnames=()
 
-	curl -u iw-test-admin:Cluster@2017$ -k https://iwtest.azurehdinsight.net/api/v1/clusters/iwtest/hosts/ > cluster_hostnames.log
+	curl -u iw-test-admin1:Cluster@2017$ -k https://iwtest1.azurehdinsight.net/api/v1/clusters/iwtest1/hosts/ > cluster_hostnames.log
 	cat cluster_hostnames.log | grep host_name  | awk '{print $3}' | sed "s/\"//g" > cluster_hostnames.txt
 
 	while read line; do 

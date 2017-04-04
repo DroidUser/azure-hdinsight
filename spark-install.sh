@@ -215,8 +215,14 @@ _init(){
 	touch $host_metadata
 }
 
+cluster_name=""
+ambari_admin=""
+ambari_pass=""
+
+{
 export cluster_name=$1
 export ambari_admin=$2
 export ambari_pass=$3
+} || echo "error getting parameters"
 
 _init

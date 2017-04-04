@@ -86,7 +86,7 @@ _list_hostnames(){
 
 	zookeeper_hostnames=()
 	echo "[$(_timestamp)]: clusterName=${cluster_name} ambari username=${ambari_admin} password=${ambari_pass}"
-	curl -u $ambari_admin:$ambari_pass -k https://${cluster_name}.azurehdinsight.net/api/v1/clusters/${cluster_name}/hosts/ > cluster_hostnames.log
+	curl -u iw-test-rg:Cluster@2017$ -k https://iwtest.azurehdinsight.net/api/v1/clusters/iwtest/hosts/ > cluster_hostnames.log
 	cat cluster_hostnames.log | grep host_name  | awk '{print $3}' | sed "s/\"//g" > cluster_hostnames.txt
 
 	while read line; do 
@@ -214,5 +214,9 @@ _init(){
 
 	touch $host_metadata
 }
+
+export cluster_name=$1
+export ambari_admin=$2
+export ambari_pass=$3
 
 _init

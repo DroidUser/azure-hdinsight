@@ -86,7 +86,7 @@ _list_hostnames(){
 
 	zookeeper_hostnames=()
 
-	curl -u iw-test-admin:Cluster@2017$ -k https://iwtest.azurehdinsight.net/api/v1/clusters/iwtest/hosts/ > api.log
+	curl -u iw-test-admin:Cluster@2017$ -k https://iwtest.azurehdinsight.net/api/v1/clusters/iwtest/hosts/ > cluster_hostnames.log
 	cat cluster_hostnames.log | grep host_name  | awk '{print $3}' | sed "s/\"//g" > cluster_hostnames.txt
 
 	while read line; do 
@@ -191,7 +191,7 @@ _init(){
 		cd /usr/hdp/current/spark2-client/
 		rm -rf work
 		echo "[$(_timestamp)]: starting slaves"
-		eval ./sbin/start-slave.sh master yarn
+		eval ./sbin/start-slave.sh master spark://${active_namenode_hostname}:7077
 	fi	 
 	
 	echo "[$(_timestamp)]: writing metadata file"

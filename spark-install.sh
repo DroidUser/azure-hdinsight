@@ -85,8 +85,8 @@ export -f _get_namenode_hostname
 _list_hostnames(){
 
 	zookeeper_hostnames=()
-	echo "[$(_timestamp)]: ambari username=${ambari_admin} password=${ambari_pass}"
-	curl -u $ambari_admin:$ambari_pass -k https://iwtest1.azurehdinsight.net/api/v1/clusters/iwtest1/hosts/ > cluster_hostnames.log
+	echo "[$(_timestamp)]: clusterName=${cluster_name} ambari username=${ambari_admin} password=${ambari_pass}"
+	curl -u $ambari_admin:$ambari_pass -k https://${cluster_name}.azurehdinsight.net/api/v1/clusters/${cluster_name}/hosts/ > cluster_hostnames.log
 	cat cluster_hostnames.log | grep host_name  | awk '{print $3}' | sed "s/\"//g" > cluster_hostnames.txt
 
 	while read line; do 

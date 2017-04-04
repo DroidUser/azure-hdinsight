@@ -202,7 +202,7 @@ _init(){
 		cd /usr/hdp/current/spark2-client/
 		rm -rf work
 		echo "[$(_timestamp)]: starting slaves"
-		eval ./sbin/start-slave.sh master spark://${active_namenode_hostname}:7077
+		eval ./sbin/start-slave.sh spark://${active_namenode_hostname}:7077
 	fi	 
 	
 	echo "[$(_timestamp)]: writing metadata file"

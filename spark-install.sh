@@ -132,7 +132,7 @@ _init(){
 	echo "[$(_timestamp)]: coping conf folder to spark2"
 	#replace default config of spark in cluster
 	cp -r /spark-config/0 /etc/spark2/$HDP_VERSION/
-	cp -r /etc/hive/$HDP_VERSION/0/hive-site.xml /etc/spark2/$HDP_VERSION/0/
+	#cp -r /etc/hive/$HDP_VERSION/0/hive-site.xml /etc/spark2/$HDP_VERSION/0/
 	cp -r /spark-config/conf /usr/hdp/$HDP_VERSION/livy/
 
 	echo "[$(_timestamp)]: replace environment file"
@@ -159,7 +159,7 @@ _init(){
 
 	echo "[$(_timestamp)]: replacing placeholders in conf files"
 	#update the master hostname in configuration files
-	#sed -i 's|{{namenode-hostnames}}|thrift:\/\/'"${active_namenode_hostname}"':9083,thrift:\/\/'"${secondary_namenode_hostname}"':9083|g' /etc/spark2/$HDP_VERSION/0/hive-site.xml
+	sed -i 's|{{namenode-hostnames}}|thrift:\/\/'"${active_namenode_hostname}"':9083,thrift:\/\/'"${secondary_namenode_hostname}"':9083|g' /etc/spark2/$HDP_VERSION/0/hive-site.xml
 	sed -i 's|{{history-server-hostname}}|'"${active_namenode_hostname}"'|g' /etc/spark2/$HDP_VERSION/0/spark-env.sh
 	sed -i 's|{{history-server-hostname}}|'"${active_namenode_hostname}"':18080|g' /etc/spark2/$HDP_VERSION/0/spark-defaults.conf
 
@@ -190,19 +190,19 @@ _init(){
 		echo "[$(_timestamp)]: starting history server"
 		eval sudo -u spark ./sbin/start-history-server.sh
 		echo "[$(_timestamp)]: starting thrift server"
-		#eval sudo -u hive ./sbin/start-thriftserver.sh --master yarn
+		eval sudo -u hive ./sbin/start-thriftserver.sh --master yarn
 		echo "[$(_timestamp)]: starting livy server"
 		cd /usr/hdp/current/livy-server/
 		eval sudo -u livy ./bin/livy-server &
 	elif [ $long_hostname == $secondary_namenode_hostname ]; then
 		cd /usr/hdp/current/spark2-client
 		echo "[$(_timestamp)]: starting thrift server"
-		#eval sudo -u hive ./sbin/start-thriftserver.sh --master yarn
+		eval sudo -u hive ./sbin/start-thriftserver.sh --master yarn
 	else
 		cd /usr/hdp/current/spark2-client/
 		rm -rf work
 		echo "[$(_timestamp)]: starting slaves"
-		eval ./sbin/start-slave.sh spark://${active_namenode_hostname}:7077
+		eval ./sbin/start-slaves.sh
 	fi	 
 	
 	echo "[$(_timestamp)]: writing metadata file"
